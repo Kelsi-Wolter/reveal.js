@@ -16,23 +16,9 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section data-markdown>
+				<section data-markdown="/innerconPartitionsTalk/new-index-on-partitioned-tables.md"
+						 data-separator-vertical="^\n\n">
 					<textarea data-template>
-						## Slide 1
-						The problem
-- Migrating data to a shiny new table with partitions and a better schema
-- In the process of moving the previous functions to the new table, we ran into some latency issues
-- One of the functions involved a lookup by tracking_number + location_id, this was behind an endpoint used to process cancellations
-- Callers of the endpoint started to see timeouts
-  - Upon further investigation, we saw that the processing time had significantly increased since switching over to the new table
-  - Easy fix - add an index to the lookup to improve performance
-  - In past, we added indexes using CONCURRENTLY to avoid downtime associated with table locking
-  - Postgres does not support using concurrently on partitioned tables at this time
-  - How to add an index to the partitioned parent table and child tables and all newly created child tables without locking anything and preventing table writes??
-
-						---
-						## Slide 2
-						content
 					</textarea>
 				</section>
 			</div>
