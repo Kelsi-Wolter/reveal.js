@@ -7,24 +7,77 @@
 
 ## TL/DR: Partitioned Tables:
 
-* highly useful in some cases.
-* not the best fit in other ones - the solution causes more problems than it solves.
-* can create an index on a large table without downtime.
+* Pro: highly useful in some cases.
+* Con: not the best fit in other ones - the solution causes more problems than it solves.
+* Pro: can create an index on a large table without downtime.
+* Q&A at the end.
 
 ---
 
-## Pros Of Partitioned Tables
+## Why Partitioned Tables?
 
-* Purge old data by dropping a partition, no `VACUUM`, no impact on server's performance
-* Large data loads done without much impact on server's performance
+- rows in Postgres are immutable
+```sql
+UPDATE fruit SET color = 'red' WHERE name = 'apple'
+```
+
+| name | size | color | state           |
+|------|------|-------|-----------------|
+| apple|  small | green | for VACUUM      |
+| apple|  small | red   | current version |
+
+- large `UPDATE` or `DELETE` creates more stale rows
+- more work for `VACUUM`, like garbage collection
 
 ---
 
-## Large Data Load Without Impact On Server's Performance
+## Massive UPDATE Or DELETE causes poor performance of the whole server 
+* `VACUUM` uses a lot of resources, slow
+* There is a better way - partitioned tables
+* Do not `DELETE` - drop a partition, fast
+* Do not `UPDATE` - insert into a new partition, drop old one, fast
 
-* Load data into a new partition
-* Can be throttled, less impact on server's performance
-* Switch reads to new partition
+---
+
+## Partitioned Table itself stores no data
+
+* Just a pattern for creating partitions
+
+<img src="images/cookie-cutter.png" />
+
+---
+
+## partitions store data
+
+- under the hood, each partition is a separate table
+- its own indexes, constraints, etc.
+
+<img src="images/two-partitions.png" />
+
+---
+## Successful Usage Of Partitioned Tables
+
+* Insert lots of data, use it for a few days, drop the partition
+
+<img src="images/conveyor-belt.png" />
+
+---
+
+## Large UPDATE
+
+* Insert data into a new partition
+* Can be throttled
+* No VACUUM
+
+<img src="images/upload-to-new-partition.png" />
+
+
+---
+
+## Partitioned Tables Are Not Always The Best Solution
+
+* There are downsides
+* Sometimes the solution causes more problems than it solves
 
 ---
 
