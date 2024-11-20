@@ -5,7 +5,20 @@
 
 ---
 
-## TL/DR: Partitioned Tables:
+## Terms
+
+Partitioned Table:  
+```CREATE TABLE target_stock PARTITION BY LIST (department)```
+Partitions:  
+```CREATE TABLE target_stock_clothing PARTITION OF target_stock FOR VALUES IN (clothing)```
+Data:  
+```INSERT INTO target_stock VALUES ('shirt', 'clothing')```
+
+
+<img src="images/diagram_of_partitioned_table.png" />
+---
+
+## TL/DR: Partitioned Tables
 
 * highly useful in some cases.
 * not the best fit in other ones - the solution causes more problems than it solves.
@@ -27,10 +40,12 @@
 * Switch reads to new partition
 
 ---
+insert slide about example in service availability?
+---
 
 ## Cons Of Partitioned Tables
 
-* Must create partitions manually
+* Must create partitions manually - and take care to handle race condition errors
 * Some queries are slower
 * Need to write SQL to ensure uniqueness, vs `UNIQUE` constraint/index
 * Need to write SQL to implement `UPSERT` vs simple `INSERT ... ON CONFLICT(...) DO UPDATE`
@@ -48,6 +63,9 @@ CREATE TABLE IF NOT EXISTS ...
 * But if two sessions run it concurrently, one might fail
 * Exactly at midnight, two sessions try to create same partition for today
 
+---
+insert slides about solution?
+catching the exception and not alerting
 ---
 
 ## Some Queries Are Slower
@@ -155,7 +173,7 @@ WHERE NOT EXISTS(
 
 ---
 
-## Create Index On Large Table Without Downtime
+## Partition Pro: Create Index On Large Table Without Downtime
 
 * usual way of creating an index:
 
@@ -163,9 +181,9 @@ WHERE NOT EXISTS(
 CREATE INDEX packages__tracking_number
 ON packages(tracking_number)
 ```
-
-* table is read only for a long time
-* server is very busy, slower responses
+* issues with this approach:
+  * table is read only for a long time
+  * server is very busy, slower responses
 
 ---
 
@@ -183,7 +201,7 @@ ON packages(tracking_number)
 
 ---
 
-## Build A New Table And Migrate To It
+## Alternatively, Build A New Table And Migrate To It
 
 <img src="images/two-houses.png" />
 
