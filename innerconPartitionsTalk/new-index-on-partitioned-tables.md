@@ -1,4 +1,4 @@
-In April 2024 our team ran into this exact problem, how did we solve it?
+In April 2024 our team ran into this exact problem on a large partitioned-table, how did we solve it?
 ---
 ## Background Context
 - New (replacement) table to house successful shipping label requests
@@ -39,7 +39,7 @@ In April 2024 our team ran into this exact problem, how did we solve it?
   - this would not be applied to any future partitions
 
 
-<img src="images/table_idx.png">
+<img src="images/index-on-partitioned-table.png">
 
 
 - Step 2: Add the index to each partition using *CONCURRENTLY*

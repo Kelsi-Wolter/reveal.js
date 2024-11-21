@@ -8,11 +8,18 @@
 ## Terms
 
 Partitioned Table:  
-```CREATE TABLE target_stock PARTITION BY LIST (department)```
+```
+CREATE TABLE target_stock PARTITION BY LIST (department)
+```  
 Partitions:  
-```CREATE TABLE target_stock_clothing PARTITION OF target_stock FOR VALUES IN (clothing)```
+```
+CREATE TABLE target_stock_clothing 
+PARTITION OF target_stock FOR VALUES IN (clothing)
+```  
 Data:  
-```INSERT INTO target_stock VALUES ('shirt', 'clothing')```
+```
+INSERT INTO target_stock VALUES ('shirt', 'clothing')
+```  
 
 
 <img src="images/diagram_of_partitioned_table.png" />
