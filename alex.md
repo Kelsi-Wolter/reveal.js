@@ -20,24 +20,77 @@ Data:
 
 ## TL/DR: Partitioned Tables
 
-* highly useful in some cases.
-* not the best fit in other ones - the solution causes more problems than it solves.
-* can create an index on a large table without downtime.
+* Pro: highly useful in some cases.
+* Con: not the best fit in other ones - the solution causes more problems than it solves.
+* Pro: can create an index on a large table without downtime.
+* Q&A at the end.
 
 ---
 
-## Pros Of Partitioned Tables
+## Why Partitioned Tables?
 
-* Purge old data by dropping a partition, no `VACUUM`, no impact on server's performance
-* Large data loads done without much impact on server's performance
+- rows in Postgres are immutable
+```sql
+UPDATE fruit SET color = 'red' WHERE name = 'apple'
+```
+
+| name | size | color | state           |
+|------|------|-------|-----------------|
+| apple|  small | green | for VACUUM      |
+| apple|  small | red   | current version |
+
+- large `UPDATE` or `DELETE` creates more stale rows
+- more work for `VACUUM`, like garbage collection
 
 ---
 
-## Large Data Load Without Impact On Server's Performance
+## Massive UPDATE Or DELETE causes poor performance of the whole server 
+* `VACUUM` uses a lot of resources, slow
+* There is a better way - partitioned tables
+* Do not `DELETE` - drop a partition, fast
+* Do not `UPDATE` - insert into a new partition, drop old one, fast
 
-* Load data into a new partition
-* Can be throttled, less impact on server's performance
-* Switch reads to new partition
+---
+
+## Partitioned Table itself stores no data
+
+* Just a pattern for creating partitions
+
+<img src="images/cookie-cutter.png" />
+
+---
+
+## partitions store data
+
+- under the hood, each partition is a separate table
+- its own indexes, constraints, etc.
+
+<img src="images/two-partitions.png" />
+
+---
+## Successful Usage Of Partitioned Tables
+
+* Insert lots of data, use it for a few days, drop the partition
+
+<img src="images/conveyor-belt.png" />
+
+---
+
+## Large UPDATE
+
+* Insert data into a new partition
+* Can be throttled
+* No VACUUM
+
+<img src="images/upload-to-new-partition.png" />
+
+
+---
+
+## Partitioned Tables Are Not Always The Best Solution
+
+* There are downsides
+* Sometimes the solution causes more problems than it solves
 
 ---
 insert slide about example in service availability?
@@ -61,7 +114,7 @@ CREATE TABLE IF NOT EXISTS ...
 
 * Safely runs consecutively
 * But if two sessions run it concurrently, one might fail
-* Exactly at midnight, two sessions try to create same partition for today
+* Exactly at midnight, two sessions try to create same partition for today - COLLISION
 
 ---
 insert slides about solution?
@@ -164,25 +217,37 @@ WHERE NOT EXISTS(
 
 ---
 
+## Must Use SERIALIZABLE Isolation Level
+
+- make sure the outcome does not change for the life of the transaction
+- more locks, slower
+```sql
+WHERE NOT EXISTS(
+    SELECT * FROM packages -- all partitions, slow
+    WHERE tracking_number = :tracking_number
+)
+```
+---
+
 ## We Could Go On...
 
-##### But The Point Is Clear Already
-
-### Partitions Are Expensive
-### Use Them After Careful Consideration
+* But the point is clear already
+* We have systems where partitioned tables are highly useful
+* Also we have systems were partitioned tables are not the best fit
+* Too difficult to ensure uniqueness, slower queries, etc.
 
 ---
 
 ## Partition Pro: Create Index On Large Table Without Downtime
 
-* usual way of creating an index:
+* usual way of creating an index on regular table:
 
 ```sql
 CREATE INDEX packages__tracking_number
 ON packages(tracking_number)
 ```
 * issues with this approach:
-  * table is read only for a long time
+  * regular table is read only for a long time - unacceptable
   * server is very busy, slower responses
 
 ---
@@ -193,7 +258,7 @@ ON packages(tracking_number)
 CREATE INDEX CONCURRENTLY packages__tracking_number
 ON packages(tracking_number)
 ```
-* table is available for modifications
+* regular table is available for modifications
 * server is very busy, slower responses
 * usually fails
 * need to retry manually, many times
@@ -209,8 +274,9 @@ ON packages(tracking_number)
 
 ## It Works, But Too Much Busywork
 
-* create a new table with new index
-* app must write to both tables
+* create a new regular table with new index
+* app must write to both regular tables
 * need to migrate all data to new table
 * need to switch reads/writes to new table
-* drop old table
+* drop old regular table
+* MUCH easier with partitions
