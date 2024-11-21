@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS ...
 
 * Safely runs consecutively
 * But if two sessions run it concurrently, one might fail
-* Exactly at midnight, two sessions try to create same partition for today
+* Exactly at midnight, two sessions try to create same partition for today - COLLISION
 
 ---
 
@@ -199,25 +199,37 @@ WHERE NOT EXISTS(
 
 ---
 
+## Must Use SERIALIZABLE Isolation Level
+
+- make sure the outcome does not change for the life of the transaction
+- more locks, slower
+```sql
+WHERE NOT EXISTS(
+    SELECT * FROM packages -- all partitions, slow
+    WHERE tracking_number = :tracking_number
+)
+```
+---
+
 ## We Could Go On...
 
-##### But The Point Is Clear Already
-
-### Partitions Are Expensive
-### Use Them After Careful Consideration
+* But the point is clear already
+* We have systems where partitioned tables are highly useful
+* Also we have systems were partitioned tables are not the best fit
+* Too difficult to ensure uniqueness, slower queries, etc.
 
 ---
 
 ## Create Index On Large Table Without Downtime
 
-* usual way of creating an index:
+* usual way of creating an index on regular table:
 
 ```sql
 CREATE INDEX packages__tracking_number
 ON packages(tracking_number)
 ```
 
-* table is read only for a long time
+* regular table is read only for a long time - unacceptable
 * server is very busy, slower responses
 
 ---
@@ -228,7 +240,7 @@ ON packages(tracking_number)
 CREATE INDEX CONCURRENTLY packages__tracking_number
 ON packages(tracking_number)
 ```
-* table is available for modifications
+* regular table is available for modifications
 * server is very busy, slower responses
 * usually fails
 * need to retry manually, many times
@@ -236,7 +248,7 @@ ON packages(tracking_number)
 
 ---
 
-## Build A New Table And Migrate To It
+## Build A New Regular Table And Migrate To It
 
 <img src="images/two-houses.png" />
 
@@ -244,8 +256,9 @@ ON packages(tracking_number)
 
 ## It Works, But Too Much Busywork
 
-* create a new table with new index
-* app must write to both tables
+* create a new regular table with new index
+* app must write to both regular tables
 * need to migrate all data to new table
 * need to switch reads/writes to new table
-* drop old table
+* drop old regular table
+* MUCH easier with partitions
