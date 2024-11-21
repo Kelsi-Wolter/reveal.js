@@ -1,12 +1,12 @@
 In April 2024 our team ran into this exact problem, how did we solve it?
 ---
 ## Background Context
-- New table to house successful shipping label requests
+- New (replacement) table to house successful shipping label requests
 - Database interactions:
     - Writes: once for each successful request
     - Read & Update: cancellation requests
     - Reads: reprint requests
-- Table is partitioned by list - using "upload date"
+- Table is partitioned by list - using "created date"
 
 
 <img src="images/label_partitions.png">
@@ -23,8 +23,7 @@ In April 2024 our team ran into this exact problem, how did we solve it?
 - Adds load to the server, causing slowness as well
 
 
-- Using `CONCURRENTLY` allows you to add an index without locking the table (with previously mentioned caveats)
-- HOWEVER:
+- Using `CONCURRENTLY` helps to avoid the table lock, however...
 ```"...one limitation when creating new indexes on partitioned tables is that it is not possible to use the CONCURRENTLY qualifier, which could lead to long lock times."```
 - Postgres suggests a process with a few more steps...
 ---
