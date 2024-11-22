@@ -5,7 +5,28 @@
 
 ---
 
-## TL/DR: Partitioned Tables:
+## Terms
+
+Partitioned Table:  
+```
+CREATE TABLE alignments PARTITION BY LIST (file_upload_id)
+```  
+Partitions:  
+```
+CREATE TABLE alignments_file_upload_1 
+PARTITION OF alignments FOR VALUES IN (1)
+```  
+Data:  
+```
+INSERT INTO alignments(upload_id, destination)
+VALUES (1, '55305')
+```  
+
+
+<img src="images/v2/partitioned_table_diagram.png" />
+---
+
+## TL/DR: Partitioned Tables
 
 * Pro: highly useful in some cases.
 * Con: not the best fit in other ones - the solution causes more problems than it solves.
@@ -80,10 +101,13 @@ UPDATE fruit SET color = 'red' WHERE name = 'apple'
 * Sometimes the solution causes more problems than it solves
 
 ---
+insert slide about example in service availability?
+---
 
 ## Cons Of Partitioned Tables
 
 * Must create partitions manually
+  * May have to handle race condition errors
 * Some queries are slower
 * Need to write SQL to ensure uniqueness, vs `UNIQUE` constraint/index
 * Need to write SQL to implement `UPSERT` vs simple `INSERT ... ON CONFLICT(...) DO UPDATE`
@@ -100,8 +124,7 @@ CREATE TABLE IF NOT EXISTS ...
 * Safely runs consecutively
 * But if two sessions run it concurrently, one might fail
 * Exactly at midnight, two sessions try to create same partition for today - COLLISION
-
----
+* Solution: catch and ignore this specific error
 
 ## Some Queries Are Slower
 
@@ -180,7 +203,7 @@ CREATE UNIQUE INDEX packages__tracking_number__unq
 ON packages(tracking_number, shipped_date)
 ```
 
-<img src="images/index-on-partitioned-table.png" />
+<img src="images/v2/table-idx.png" />
 
 ---
 
@@ -220,7 +243,7 @@ WHERE NOT EXISTS(
 
 ---
 
-## Create Index On Large Table Without Downtime
+## Partition Pro: Create Index On Large Table Without Downtime
 
 * usual way of creating an index on regular table:
 
@@ -228,9 +251,9 @@ WHERE NOT EXISTS(
 CREATE INDEX packages__tracking_number
 ON packages(tracking_number)
 ```
-
-* regular table is read only for a long time - unacceptable
-* server is very busy, slower responses
+* issues with this approach:
+  * regular table is read only for a long time - unacceptable
+  * server is very busy, slower responses
 
 ---
 
@@ -248,7 +271,7 @@ ON packages(tracking_number)
 
 ---
 
-## Build A New Regular Table And Migrate To It
+## Alternatively, Build A New Table And Migrate To It
 
 <img src="images/two-houses.png" />
 
