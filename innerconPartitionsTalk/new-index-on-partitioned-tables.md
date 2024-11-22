@@ -9,7 +9,7 @@ In April 2024 our team ran into this exact problem on a large partitioned-table,
 - Table is partitioned by list - using "created date"
 
 
-<img src="images/label_partitions.png">
+<img src="images/v2/label_partitions2.png">
 ---
 ## A Performance Issue Appears
 - Problem arose after migrating the cancellation functionality to the new table
@@ -39,7 +39,7 @@ In April 2024 our team ran into this exact problem on a large partitioned-table,
   - this would not be applied to any future partitions
 
 
-<img src="images/index-on-partitioned-table.png">
+<img src="images/v2/table-idx.png">
 
 
 - Step 2: Add the index to each partition using *CONCURRENTLY*
@@ -49,7 +49,7 @@ In April 2024 our team ran into this exact problem on a large partitioned-table,
   ```
 
 
-<img src="images/partitions-idx.png">
+<img src="images/v2/partitions-idx.png">
 
 
 - Step 3: Attach all partition indexes to the table index
@@ -57,7 +57,7 @@ In April 2024 our team ran into this exact problem on a large partitioned-table,
   ALTER INDEX successful_label_cancel_idx
   ATTACH PARTITION successful_label_20240417_cancel_idx;
   ```
-<img src="images/valid-idx.png">
+<img src="images/v2/valid-idx.png">
 
 
 - once the index meets all 3 criteria, the index is marked as `valid`  
@@ -80,19 +80,19 @@ Executing the Steps in a Table Partitioned by List/Date
   - create the partition for the next day's date WITH the index
 
 
-<img src="images/step-1.png">
+<img src="images/v2/step-1v2.png">
 
 
 Day 2
 - on the next day add the index to the older partitions using *CONCURRENTLY*
 
 
-<img src="images/step-2.png">
+<img src="images/v2/step-2v2.png">
 
 
 - attach all partition indexes to the table index
 - parent index becomes valid!
-<img src="images/final-step.png">
+<img src="images/v2/final-step2.png">
 ---
 ## The outcome
 - no downtime!

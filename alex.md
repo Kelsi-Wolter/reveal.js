@@ -9,20 +9,21 @@
 
 Partitioned Table:  
 ```
-CREATE TABLE target_stock PARTITION BY LIST (department)
+CREATE TABLE alignments PARTITION BY LIST (file_upload_id)
 ```  
 Partitions:  
 ```
-CREATE TABLE target_stock_clothing 
-PARTITION OF target_stock FOR VALUES IN (clothing)
+CREATE TABLE alignments_file_upload_1 
+PARTITION OF alignments FOR VALUES IN (1)
 ```  
 Data:  
 ```
-INSERT INTO target_stock VALUES ('shirt', 'clothing')
+INSERT INTO alignments(upload_id, destination)
+VALUES (1, '55305')
 ```  
 
 
-<img src="images/diagram_of_partitioned_table.png" />
+<img src="images/v2/partitioned_table_diagram.png" />
 ---
 
 ## TL/DR: Partitioned Tables
@@ -105,7 +106,8 @@ insert slide about example in service availability?
 
 ## Cons Of Partitioned Tables
 
-* Must create partitions manually - and take care to handle race condition errors
+* Must create partitions manually
+  * May have to handle race condition errors
 * Some queries are slower
 * Need to write SQL to ensure uniqueness, vs `UNIQUE` constraint/index
 * Need to write SQL to implement `UPSERT` vs simple `INSERT ... ON CONFLICT(...) DO UPDATE`
