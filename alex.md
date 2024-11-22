@@ -124,11 +124,7 @@ CREATE TABLE IF NOT EXISTS ...
 * Safely runs consecutively
 * But if two sessions run it concurrently, one might fail
 * Exactly at midnight, two sessions try to create same partition for today - COLLISION
-
----
-insert slides about solution?
-catching the exception and not alerting
----
+* Solution: catch and ignore this specific error
 
 ## Some Queries Are Slower
 
@@ -207,7 +203,7 @@ CREATE UNIQUE INDEX packages__tracking_number__unq
 ON packages(tracking_number, shipped_date)
 ```
 
-<img src="images/index-on-partitioned-table.png" />
+<img src="images/v2/table-idx.png" />
 
 ---
 
