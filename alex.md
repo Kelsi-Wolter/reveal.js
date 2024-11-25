@@ -77,11 +77,12 @@ UPDATE fruit SET color = 'red' WHERE name = 'apple'
 <img src="images/two-partitions.png" />
 
 ---
+## Successful Usage Of Partitioned Tables
 * Many INSERTS/DELETEs, easy on server
 * Insert lots of data, drop partition in a few days
 * we have about a dozen of such tables, works great
 
-<img src="images/conveyor-belt.png"  height="50%" width="50%"/>
+<img src="images/conveyor-belt.png"  height="30%" width="30%"/>
 
 ---
 
