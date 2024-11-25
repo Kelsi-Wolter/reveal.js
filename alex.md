@@ -5,7 +5,7 @@
 
 ---
 
-## Terms
+## Partitions 101
 
 Partitioned Table:  
 ```
@@ -145,11 +145,12 @@ SELECT * FROM packages WHERE tracking_number = '123456'
 ## Counterintuitive? Let's Take A Detailed Look.
 
 ---
-## Cost Of Index Seek = Number Of Pages Read
+##### Cost Of Index Seek = Number Of Pages Read
 
 * Oversimplified, but good enough for our purposes
+* Applies to non-partitioned tables and a lookup in one partition
 
-<img src="images/bigger-table.png" />
+<img src="images/bigger-table.png" height="75%" width="75%"/>
 
 ---
 

@@ -65,10 +65,12 @@ In April 2024 our team ran into this exact problem on a large partitioned-table,
   ✅ index exists on all partitions  
   ✅ partition indexes are attached to the table index  
 - once the index is marked as valid, it will automatically be applied to future generated partitions 🎉
----
-We shall create indexes in such an order that we never create an index on a partition that is being actively modified.
-<br/>
-This way we shall avoid downtime, and indexes will create successfully.
+
+
+Bonus Note on Avoiding Downtime
+- create indexes in such an order that we never create an index on a partition that is being actively modified
+- this way we can avoid downtime and indexes will create successfully
+
 ---
 Executing the Steps in a Table Partitioned by List/Date  
 <img src="images/partitions2.png"/>
@@ -84,7 +86,7 @@ Executing the Steps in a Table Partitioned by List/Date
   - create the partition for the next day's date WITH the index
 
 
-<img src="images/v2/step-1v2.png">
+<img src="images/v2/step1v3.png">
 
 
 Day 2
