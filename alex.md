@@ -49,6 +49,7 @@ UPDATE fruit SET color = 'red' WHERE name = 'apple'
 
 - large `UPDATE` or `DELETE` creates more stale rows
 - more work for `VACUUM`, like garbage collection
+- `VACUUM` can disrupt the whole server
 
 ---
 
@@ -76,32 +77,30 @@ UPDATE fruit SET color = 'red' WHERE name = 'apple'
 <img src="images/two-partitions.png" />
 
 ---
-## Successful Usage Of Partitioned Tables
+* Many INSERTS/DELETEs, easy on server
+* Insert lots of data, drop partition in a few days
+* we have about a dozen of such tables, works great
 
-* Insert lots of data, use it for a few days, drop the partition
-
-<img src="images/conveyor-belt.png" />
+<img src="images/conveyor-belt.png"  height="50%" width="50%"/>
 
 ---
 
-## Large UPDATE
+#### Large UPDATE, easy on server
 
-* Insert data into a new partition
-* Can be throttled
-* No VACUUM
+* Insert data into a new partition, can be throttled, no VACUUM
+* We have such a system, happy
+* Can easily compare two versions and rollback
 
-<img src="images/upload-to-new-partition.png" />
-
+<img src="images/upload-to-new-partition.png"  height="50%" width="50%"/>
 
 ---
 
 ## Partitioned Tables Are Not Always The Best Solution
 
+* We have a system where we considered partitioned tables, but decided against them
 * There are downsides
 * Sometimes the solution causes more problems than it solves
 
----
-insert slide about example in service availability?
 ---
 
 ## Cons Of Partitioned Tables
@@ -110,12 +109,11 @@ insert slide about example in service availability?
   * May have to handle race condition errors
 * Some queries are slower
 * Need to write SQL to ensure uniqueness, vs `UNIQUE` constraint/index
-* Need to write SQL to implement `UPSERT` vs simple `INSERT ... ON CONFLICT(...) DO UPDATE`
 * And more...
 
 ---
 
-## Race Condition Creating Partitions
+##### Race Condition Creating Partitions Optimistically
 
 ```sql
 CREATE TABLE IF NOT EXISTS ...
@@ -125,6 +123,8 @@ CREATE TABLE IF NOT EXISTS ...
 * But if two sessions run it concurrently, one might fail
 * Exactly at midnight, two sessions try to create same partition for today - COLLISION
 * Solution: catch and ignore this specific error
+
+---
 
 ## Some Queries Are Slower
 
@@ -141,7 +141,7 @@ SELECT * FROM packages WHERE tracking_number = '123456'
 
 ---
 
-## Counterintuitive? Let's Take A Look.
+## Counterintuitive? Let's Take A Detailed Look.
 
 ---
 ## Cost Of Index Seek = Number Of Pages Read
@@ -154,21 +154,23 @@ SELECT * FROM packages WHERE tracking_number = '123456'
 
 ## Table Grows, Cost Of Index Seek Stays The Same
 
-* Number Of Pages Read = Logarithm Of Table Size
-* Table Can Grow 20-30 Times, Cost Of Index Seek Stays The Same
-* It Cuts Both Ways - Table Can Shrink, Cost Of Index Seek Can Stay The Same
+* Number of pages read = logarithm of table size
+* Table can grow 20-30 times, cost of index seek stays the same
+* Eventually, cost of index seek will increase, not by much
+* It cuts both ways - table can shrink, cost of index seek can stay the same
 
 ---
 
-## Table Gets Divided Into 15 Partitions
+## WHEN Table Gets Divided Into Many Partitions
 * Maybe the cost of index seek is the same for the whole table and one partition
 * Or slightly less for partition, not by much
-* Overall, the cost of 15 index seeks is much higher
+* Overall, the cost of many index seeks is much higher
 
 ---
 
 ## Solution - Less Partitions
 
+* do not partition per day
 * partition per month or at least per week
 * need more storage
 * much faster queries
@@ -225,7 +227,7 @@ WHERE NOT EXISTS(
 ## Must Use SERIALIZABLE Isolation Level
 
 - make sure the outcome does not change for the life of the transaction
-- more locks, slower
+- more work for server, slower
 ```sql
 WHERE NOT EXISTS(
     SELECT * FROM packages -- all partitions, slow
