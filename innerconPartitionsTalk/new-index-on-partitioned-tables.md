@@ -103,6 +103,6 @@ Day 2
 ## The outcome
 - no downtime!
 - indexes were generated on all newly generated partitions!
-- latency on cancellation requests improved from previous performance, now using the new partitioned table with correct indexes!
+- latency on cancellation requests improved to meet our SLAs, now using the new partitioned table with correct indexes!
 ---
 Thank you!

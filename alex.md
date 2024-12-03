@@ -5,7 +5,8 @@
 
 ---
 
-## Partitions 101
+## Table Partitioning 101
+Breaking data into smaller pieces 
 
 Partitioned Table:  
 ```
